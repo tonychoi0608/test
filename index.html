@@ -1,14 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Window</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <div class="status-window">
+        <div class="status-header">
+            <h2>STATUS</h2>
+        </div>
+        <div class="status-body">
+            <div class="char-info">
+                <p>LEVEL: <span id="level">1</span></p>
+            </div>
+            <div class="stat-bars">
+                <div class="stat-bar">
+                    <p>HP</p>
+                    <div class="bar">
+                        <div class="bar-fill hp"></div>
+                    </div>
+                    <p><span id="hp">100</span> / 100</p>
+                </div>
+                <div class="stat-bar">
+                    <p>MP</p>
+                    <div class="bar">
+                        <div class="bar-fill mp"></div>
+                    </div>
+                    <p><span id="mp">50</span> / 50</p>
+                </div>
+                <div class="stat-bar">
+                    <p>EXP</p>
+                    <div class="bar">
+                        <div class="bar-fill exp"></div>
+                    </div>
+                    <p><span id="exp">0</span> / 100</p>
+                </div>
+            </div>
+        </div>
+        <div class="status-footer">
+            <button id="exp-button">Gain EXP</button>
+            <button id="rest-button">Rest</button>
+        </div>
+    </div>
+    <script src="main.js"></script>
 </body>
 </html>
