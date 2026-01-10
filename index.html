@@ -1,50 +1,406 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Status Window</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CHARACTER STAT — 최준영</title>
+  <meta name="description" content="웹툰 이세계 상태창 스타일 프로필 — 최준영" />
+
+  <style>
+    :root{
+      /* Webtoon STAT palette */
+      --bg: #060a12;
+      --panel: #18A3FF;          /* main blue */
+      --panel2:#0F7FDB;          /* darker blue */
+      --panel3:#49C2FF;          /* highlight */
+      --text: #EAF7FF;
+      --text2:#CDEEFF;
+      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --border: rgba(255,255,255,.95);
+      --borderSoft: rgba(255,255,255,.55);
+      --accent: #ffffff;
+      --good: #BFFFE0;
+      --warn: #FFE2A8;
+      --bad:  #FFB5C6;
+
+      --radius: 12px;
+      --pad: 18px;
+
+      /* “pixel-ish” without external fonts */
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 600px at 50% -10%, rgba(24,163,255,.22), transparent 60%),
+        radial-gradient(700px 500px at 15% 110%, rgba(73,194,255,.14), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family: var(--ui);
+      letter-spacing:-0.2px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    a{color:inherit; text-decoration:none} 
+    a:hover{ text-decoration:underline; }
+
+    .frame{
+      width:min(860px, 100%);
+      filter: drop-shadow(var(--shadow));
+    }
+
+    /* Outer “webtoon card” frame */
+    .statCard{
+      position:relative;
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border: 4px solid var(--border);
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+
+    /* Inner border line */
+    .statCard::before{
+      content:"";
+      position:absolute; inset:10px;
+      border: 2px solid var(--borderSoft);
+      border-radius: calc(var(--radius) - 4px);
+      pointer-events:none;
+    }
+
+    /* glossy top highlight */
+    .shine{
+      position:absolute; inset:-30% -30% auto -30%;
+      height:140px;
+      background: radial-gradient(circle at 40% 80%, rgba(255,255,255,.35), transparent 60%);
+      transform: rotate(-8deg);
+      pointer-events:none;
+      mix-blend-mode: screen;
+      opacity:.55;
+    }
+
+    .content{
+      position:relative;
+      padding: 18px 22px 18px;
+    }
+
+    .titleBar{
+      font-family: var(--mono);
+      font-weight:800;
+      text-align:center;
+      color: var(--accent);
+      font-size: 22px;
+      letter-spacing: .5px;
+      margin: 6px 0 14px;
+      text-shadow: 0 2px 0 rgba(0,0,0,.18);
+    }
+
+    .titleBar span{
+      display:inline-block;
+      padding:6px 12px;
+      border:2px solid rgba(255,255,255,.75);
+      border-radius: 10px;
+      background: rgba(255,255,255,.06);
+    }
+
+    .rows{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding: 2px 8px 10px;
+      font-family: var(--mono);
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      line-height:1.55;
+    }
+
+    .k{
+      width: 128px;
+      color: rgba(255,255,255,.95);
+      flex: 0 0 auto;
+      white-space:nowrap;
+    }
+
+    .v{
+      flex:1 1 auto;
+      color: rgba(255,255,255,.92);
+      word-break:keep-all;
+    }
+
+    .divider{
+      height:2px;
+      background: rgba(255,255,255,.55);
+      margin: 10px 0 8px;
+    }
+
+    /* “block gauge” like ■■■ */
+    .blocks{
+      display:inline-flex;
+      gap:4px;
+      vertical-align:middle;
+      margin-right:8px;
+    }
+    .blk{
+      width:10px; height:10px;
+      border:1px solid rgba(255,255,255,.85);
+      background: rgba(255,255,255,.08);
+    }
+    .blk.on{ background: rgba(255,255,255,.92); }
+
+    .tiny{
+      font-size: 13px;
+      color: rgba(255,255,255,.85);
+    }
+
+    .eval{
+      margin-top: 6px;
+      padding: 10px 12px;
+      border: 2px solid rgba(255,255,255,.7);
+      border-radius: 10px;
+      background: rgba(0,0,0,.10);
+      font-family: var(--mono);
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+    }
+
+    .eval b{color:#fff}
+    .eval .hint{color: rgba(255,255,255,.82)}
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 14px;
+      padding: 0 8px 6px;
+    }
+
+    .btn{
+      font-family: var(--mono);
+      font-weight:800;
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,.82);
+      background: rgba(255,255,255,.10);
+      color: rgba(255,255,255,.95);
+      cursor:pointer;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.16); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.primary{
+      background: rgba(255,255,255,.18);
+      border-color: rgba(255,255,255,.95);
+    }
+
+    .links{
+      margin-top: 10px;
+      padding: 0 8px 6px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 760px){
+      .k{width:110px}
+      .links{grid-template-columns:1fr}
+    }
+
+    .linkCard{
+      border: 2px solid rgba(255,255,255,.72);
+      border-radius: 10px;
+      background: rgba(0,0,0,.10);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      color: rgba(255,255,255,.95);
+    }
+    .linkCard .t{font-weight:900; font-size:13px}
+    .linkCard .u{margin-top:6px; font-size:12px; color: rgba(255,255,255,.86); opacity:.95; word-break:break-all}
+    .footerNote{
+      text-align:center;
+      font-family: var(--mono);
+      color: rgba(255,255,255,.78);
+      margin-top: 10px;
+      font-size: 12px;
+      opacity:.95;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="status-window">
-        <div class="status-header">
-            <h2>STATUS</h2>
-        </div>
-        <div class="status-body">
-            <div class="char-info">
-                <p>LEVEL: <span id="level">1</span></p>
+  <div class="frame">
+    <section class="statCard" aria-label="웹툰 상태창">
+      <div class="shine"></div>
+
+      <div class="content">
+        <div class="titleBar"><span>&lt; CHARACTER STAT &gt;</span></div>
+
+        <div class="rows">
+          <div class="row">
+            <div class="k">이름:</div>
+            <div class="v">최준영 (Junyoung Choi)</div>
+          </div>
+
+          <div class="row">
+            <div class="k">거점:</div>
+            <div class="v">대한민국 · 봉담</div>
+          </div>
+
+          <div class="row">
+            <div class="k">Lv.:</div>
+            <div class="v">418 (현실판) <span class="tiny">/ ENTP / IQ 148</span></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <div class="k">HP:</div>
+            <div class="v">1833 / 2000 <span class="tiny">(체력/멘탈 내구도)</span></div>
+          </div>
+
+          <div class="row">
+            <div class="k">MP:</div>
+            <div class="v">445 / 1000 <span class="tiny">(집중력/창의력 마나)</span></div>
+          </div>
+
+          <div class="row">
+            <div class="k">전용 특성:</div>
+            <div class="v">
+              <span class="blocks" aria-hidden="true">
+                <span class="blk on"></span><span class="blk on"></span><span class="blk on"></span><span class="blk on"></span>
+              </span>
+              구조적 사고 · 실패 데이터화 · 바이브코딩(프로토타입 속도) <span class="tiny">[Lv.12]</span>
             </div>
-            <div class="stat-bars">
-                <div class="stat-bar">
-                    <p>HP</p>
-                    <div class="bar">
-                        <div class="bar-fill hp"></div>
-                    </div>
-                    <p><span id="hp">100</span> / 100</p>
-                </div>
-                <div class="stat-bar">
-                    <p>MP</p>
-                    <div class="bar">
-                        <div class="bar-fill mp"></div>
-                    </div>
-                    <p><span id="mp">50</span> / 50</p>
-                </div>
-                <div class="stat-bar">
-                    <p>EXP</p>
-                    <div class="bar">
-                        <div class="bar-fill exp"></div>
-                    </div>
-                    <p><span id="exp">0</span> / 100</p>
-                </div>
+          </div>
+
+          <div class="row">
+            <div class="k">전용 스킬:</div>
+            <div class="v">
+              <span class="blocks" aria-hidden="true">
+                <span class="blk on"></span><span class="blk on"></span><span class="blk on"></span><span class="blk"></span>
+              </span>
+              플랜트 기계설계/제작(CATIA/AutoCAD) <span class="tiny">[Lv.20]</span>
+              <br/>
+              <span class="blocks" aria-hidden="true" style="margin-top:6px">
+                <span class="blk on"></span><span class="blk on"></span><span class="blk"></span><span class="blk"></span>
+              </span>
+              GPT API · Firebase · Flask · ComfyUI · CapCut · Photoshop/Illustrator <span class="tiny">[Lv.10]</span>
             </div>
+          </div>
+
+          <div class="row">
+            <div class="k">배분 포인트:</div>
+            <div class="v">14 <span class="tiny">(올해 투자 가능한 성장 슬롯)</span></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <div class="k">능력치:</div>
+            <div class="v">
+              INT 92 · TECH 90 · EXEC 95 · GOLD 42
+              <span class="tiny">(자본력/신용 제약: 개인회생)</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="k">피지컬:</div>
+            <div class="v">186cm / 98kg · 체지방 30kg · 골격근 38kg</div>
+          </div>
+
+          <div class="row">
+            <div class="k">전투기록:</div>
+            <div class="v">Bench 100 · Dead 130 · Squat 180 (1RM) / 100m 17초</div>
+          </div>
+
+          <div class="eval">
+            <span class="blocks" aria-hidden="true">
+              <span class="blk on"></span><span class="blk on"></span><span class="blk on"></span><span class="blk"></span>
+            </span>
+            <b>종합 평가:</b>
+            <span class="hint">
+              “유리한 상황에서는 빠르게 성장 가능. 다만 <b>‘자본(GOLD)’</b> 제약이 병목이라,
+              <b>수익화 퀘스트</b>를 먼저 클리어해야 함.”
+            </span>
+          </div>
         </div>
-        <div class="status-footer">
-            <button id="exp-button">Gain EXP</button>
-            <button id="rest-button">Rest</button>
+
+        <div class="actions">
+          <button class="btn primary" id="goMildang">🎮 밀당연습기 입장</button>
+          <button class="btn" id="copyBtn">📋 상태창 요약 복사</button>
         </div>
-    </div>
-    <script src="main.js"></script>
+
+        <div class="links" aria-label="채널 링크">
+          <a class="linkCard" href="https://www.youtube.com/ @Successfulman_gimkusam" target="_blank" rel="noopener">
+            <div class="t">YouTube</div>
+            <div class="u">youtube.com/ @Successfulman_gimkusam</div>
+          </a>
+
+          <a class="linkCard" href="https://www.instagram.com/junyoung_winestagram/" target="_blank" rel="noopener">
+            <div class="t">Instagram</div>
+            <div class="u">instagram.com/junyoung_winestagram</div>
+          </a>
+
+          <a class="linkCard" href="https://mildang.replit.app" target="_blank" rel="noopener">
+            <div class="t">mildang.replit.app</div>
+            <div class="u">mildang.replit.app</div>
+          </a>
+        </div>
+
+        <div class="footerNote">
+          TIP: 이 페이지를 “명함”처럼 공유하고, 스킬/퀘스트 수치만 바꿔서 계속 업데이트하면 됨.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 링크 버튼
+    document.getElementById("goMildang").addEventListener("click", () => {
+      window.open("https://mildang.replit.app", "_blank", "noopener");
+    });
+
+    // 요약 복사
+    const summary = [
+      "< CHARACTER STAT >",
+      "이름: 최준영 (Junyoung Choi)",
+      "거점: KR · 봉담",
+      "Lv: 418 / ENTP / IQ 148",
+      "HP 1833/2000 · MP 445/1000",
+      "특성(Lv.12): 구조적 사고 · 실패 데이터화 · 바이브코딩",
+      "스킬: 기계설계/제작(CATIA/AutoCAD Lv.20), GPT API·Firebase·Flask·ComfyUI·CapCut·PS/AI",
+      "능력치: INT92 TECH90 EXEC95 GOLD42 (개인회생으로 자본/신용 제약)",
+      "프로젝트: 효도달력(2026.01) · 밀당연습기(MVP) · 자동 블로그 시스템",
+      "채널: YouTube @Successfulman_gimkusam / Instagram @junyoung_winestagram",
+      "링크: https://mildang.replit.app"
+    ].join("\n");
+
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("copyBtn");
+      const prev = btn.textContent;
+      try{
+        await navigator.clipboard.writeText(summary);
+        btn.textContent = "복사 완료 ✅";
+        setTimeout(()=> btn.textContent = prev, 1200);
+      }catch(e){
+        alert("복사 실패: 브라우저 권한(클립보드)을 확인해줘.");
+      }
+    });
+  </script>
 </body>
 </html>
